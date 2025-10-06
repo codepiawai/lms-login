@@ -1,270 +1,176 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Login dengan Gmail (Google Identity Services)</title>
 
-  <!-- GIS script (wajib) -->
+  <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-  <!-- Ganti dengan Client ID Anda -->
-  <meta name="google-signin-client_id" content="YOUR_GOOGLE_CLIENT_ID" />
-
   <style>
-    :root { --bg:#0f172a; --panel:#111827; --text:#e5e7eb; --muted:#9ca3af; --accent:#22c55e; }
-    *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#0b1022,#0f172a 50%,#0b1022);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial}
-    .wrap{min-height:100svh;display:grid;place-items:center;padding:24px}
-    .card{width:100%;max-width:560px;background:rgba(17,24,39,.75);backdrop-filter:blur(6px);border:1px solid #1f2937;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden}
-    .hdr{padding:22px 24px;border-bottom:1px solid #1f2937}
-    .hdr h1{margin:0;color:#e5e7eb;font-size:20px;font-weight:700;letter-spacing:.3px}
-    .body{padding:24px}
-    .row{display:flex;gap:20px;flex-wrap:wrap}
-    .col{flex:1 1 240px}
-    .muted{color:var(--muted);font-size:14px;line-height:1.6}
-    .panel{background:#0b1220;border:1px solid #1f2937;border-radius:14px;padding:16px}
-    code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;color:#d1d5db}
-    .status{display:flex;align-items:center;gap:10px;font-size:14px;color:#d1d5db}
-    .dot{width:8px;height:8px;border-radius:99px;background:#ef4444;box-shadow:0 0 12px rgba(239,68,68,.6)}
-    .dot.ok{background:#22c55e;box-shadow:0 0 12px rgba(34,197,94,.6)}
-    .btn{appearance:none;border:0;background:#16a34a;color:white;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
-    .btn:disabled{opacity:.5;cursor:not-allowed}
-    .user{display:flex;gap:14px;align-items:center}
-    .user img{width:48px;height:48px;border-radius:50%;border:2px solid #1f2937;object-fit:cover}
-    .kv{display:grid;grid-template-columns:120px 1fr;gap:8px;margin-top:8px}
-    .kv div{color:#e5e7eb;font-size:14px}
-    .kv .k{color:#93c5fd}
-    .foot{padding:18px 24px;border-top:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center}
-    a.link{color:#86efac;text-decoration:none}
-    a.link:hover{text-decoration:underline}
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(180deg, #0b1022, #0f172a 50%, #0b1022);
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: rgba(17, 24, 39, 0.9);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+      max-width: 400px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 20px;
+      margin-bottom: 15px;
+      color: #22c55e;
+    }
+    #gBtn {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    .btn {
+      background: #16a34a;
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      margin: 5px;
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .profile {
+      margin-top: 15px;
+      display: none;
+      text-align: left;
+      border-top: 1px solid #334155;
+      padding-top: 10px;
+    }
+    .profile img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      vertical-align: middle;
+      margin-right: 10px;
+    }
+    pre {
+      background: #1e293b;
+      padding: 10px;
+      font-size: 12px;
+      overflow-x: auto;
+      border-radius: 8px;
+      color: #94a3b8;
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div class="hdr">
-        <h1>Login dengan Gmail (OAuth 2.0 – Google Identity Services)</h1>
-      </div>
 
-      <div class="body">
-        <div class="row">
-          <div class="col">
-            <div class="panel">
-              <div class="status">
-                <span id="statusDot" class="dot"></span>
-                <span id="statusText">Belum login</span>
-              </div>
+  <div class="card">
+    <h1>Login dengan Gmail</h1>
+    <div id="status">🔴 Belum login</div>
+    <div id="gBtn"></div>
 
-              <!-- Kontainer tombol Google -->
-              <div id="gBtn" style="margin-top:14px;"></div>
+    <button id="btnPrompt" class="btn">Tampilkan One Tap</button>
+    <button id="btnLogout" class="btn" disabled>Logout</button>
 
-              <!-- Tombol paksa One Tap (opsional) -->
-              <div style="margin-top:10px; display:flex; gap:10px;">
-                <button id="btnPrompt" class="btn" type="button">Tampilkan One Tap</button>
-                <button id="btnLogout" class="btn" type="button" disabled>Logout</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="col">
-            <div class="panel">
-              <div class="user" id="userBox" style="display:none;">
-                <img id="avatar" alt="avatar" src="">
-                <div>
-                  <div id="fullName" style="font-weight:700;"></div>
-                  <div id="email" class="muted"></div>
-                </div>
-              </div>
-
-              <div class="kv" id="kv" style="display:none;">
-                <div class="k">Given Name</div><div id="givenName"></div>
-                <div class="k">Family Name</div><div id="familyName"></div>
-                <div class="k">Sub (User ID)</div><div id="sub"></div>
-                <div class="k">Issuer</div><div id="iss"></div>
-                <div class="k">Audience</div><div id="aud"></div>
-                <div class="k">Expire</div><div id="exp"></div>
-              </div>
-
-              <details style="margin-top:12px;">
-                <summary class="muted">Lihat payload ID Token (decoded)</summary>
-                <pre id="payloadBox" style="white-space:pre-wrap;word-break:break-word;margin-top:8px;"></pre>
-              </details>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel" style="margin-top:18px;">
-          <b style="color:#e5e7eb;">Cara pakai & catatan keamanan</b>
-          <ol class="muted">
-            <li><b>Client ID</b>: ganti <code>YOUR_GOOGLE_CLIENT_ID</code> dengan Client ID dari Google Cloud Console.</li>
-            <li><b>Origins</b>: pastikan domain/port Anda terdaftar di “Authorized JavaScript origins”.</li>
-            <li><b>Produksi</b>: verifikasi <i>ID Token</i> di <u>backend</u> (server) menggunakan Google public keys (JWKS). Di demo ini, token hanya di-decode di sisi klien untuk menampilkan profil.</li>
-            <li><b>Logout</b>: gunakan <code>google.accounts.id.revoke(email)</code> untuk mencabut persetujuan akun.</li>
-          </ol>
-        </div>
-      </div>
-
-      <div class="foot">
-        <span class="muted">© 2025 – Contoh GIS Login</span>
-        <a class="link" href="https://developers.google.com/identity/gsi/web" target="_blank" rel="noreferrer">Dokumentasi resmi</a>
-      </div>
+    <div class="profile" id="profile">
+      <img id="avatar" src="" alt="Avatar" />
+      <span id="name"></span><br />
+      <small id="email"></small>
     </div>
+
+    <details style="margin-top:10px;">
+      <summary>Lihat Payload ID Token</summary>
+      <pre id="payload"></pre>
+    </details>
   </div>
 
   <script>
-    // ====== Util: decode Base64URL (untuk melihat payload JWT di demo) ======
-    function base64UrlDecode(str) {
-      // ganti URL-safe chars
-      str = str.replace(/-/g, '+').replace(/_/g, '/');
-      // pad
-      const pad = str.length % 4;
-      if (pad) str += '='.repeat(4 - pad);
-      // decode
-      const decoded = atob(str);
-      // konversi ke UTF-8
-      const bytes = Uint8Array.from(decoded, c => c.charCodeAt(0));
-      const decoder = new TextDecoder('utf-8');
-      return decoder.decode(bytes);
-    }
+    const CLIENT_ID = "402210260007-gcm29644ki9tojbndgq13gorio6v5ueq.apps.googleusercontent.com";
 
-    function parseJwt(jwt) {
-      const parts = jwt.split('.');
-      if (parts.length !== 3) return null;
-      const payload = JSON.parse(base64UrlDecode(parts[1]));
-      return payload;
-    }
-
-    // ====== State UI sederhana ======
-    const $ = sel => document.querySelector(sel);
-    const statusDot = $('#statusDot');
-    const statusText = $('#statusText');
-    const userBox   = $('#userBox');
-    const avatar    = $('#avatar');
-    const fullName  = $('#fullName');
-    const email     = $('#email');
-    const givenName = $('#givenName');
-    const familyName= $('#familyName');
-    const sub       = $('#sub');
-    const iss       = $('#iss');
-    const aud       = $('#aud');
-    const exp       = $('#exp');
-    const kv        = $('#kv');
-    const payloadBox= $('#payloadBox');
-    const btnLogout = $('#btnLogout');
-    const btnPrompt = $('#btnPrompt');
+    const statusEl = document.getElementById("status");
+    const gBtn = document.getElementById("gBtn");
+    const btnPrompt = document.getElementById("btnPrompt");
+    const btnLogout = document.getElementById("btnLogout");
+    const profile = document.getElementById("profile");
+    const avatar = document.getElementById("avatar");
+    const nameEl = document.getElementById("name");
+    const emailEl = document.getElementById("email");
+    const payloadEl = document.getElementById("payload");
 
     let currentEmail = null;
 
-    function setLoggedInUI(payload) {
-      statusDot.classList.add('ok');
-      statusText.textContent = 'Sudah login';
-      userBox.style.display = '';
-      kv.style.display = '';
-      btnLogout.disabled = false;
-
-      avatar.src = payload.picture || '';
-      fullName.textContent = payload.name || '';
-      email.textContent = payload.email || '';
-      givenName.textContent = payload.given_name || '';
-      familyName.textContent = payload.family_name || '';
-      sub.textContent = payload.sub || '';
-      iss.textContent = payload.iss || '';
-      aud.textContent = payload.aud || '';
-      exp.textContent = payload.exp ? (new Date(payload.exp * 1000)).toLocaleString() : '';
-      payloadBox.textContent = JSON.stringify(payload, null, 2);
-
-      currentEmail = payload.email || null;
+    function base64UrlDecode(str) {
+      str = str.replace(/-/g, '+').replace(/_/g, '/');
+      const pad = str.length % 4;
+      if (pad) str += '='.repeat(4 - pad);
+      return decodeURIComponent(escape(atob(str)));
     }
 
-    function setLoggedOutUI() {
-      statusDot.classList.remove('ok');
-      statusText.textContent = 'Belum login';
-      userBox.style.display = 'none';
-      kv.style.display = 'none';
-      btnLogout.disabled = true;
-      avatar.src = '';
-      fullName.textContent = '';
-      email.textContent = '';
-      payloadBox.textContent = '';
-      currentEmail = null;
+    function parseJwt(token) {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      return JSON.parse(base64UrlDecode(parts[1]));
     }
 
-    // ====== Callback dari GIS saat user berhasil memilih akun ======
-    async function handleCredentialResponse(response) {
-      // response.credential adalah ID Token (JWT)
-      const idToken = response.credential;
-
-      // DEMO: decode di klien untuk menampilkan profil (JANGAN untuk verifikasi produksi)
-      const payload = parseJwt(idToken);
+    function handleCredentialResponse(response) {
+      const payload = parseJwt(response.credential);
       if (!payload) {
-        alert('Gagal memproses token.');
+        alert("Gagal membaca token Google");
         return;
       }
-      setLoggedInUI(payload);
 
-      // OPSIONAL: kirim ke backend Anda untuk diverifikasi pakai JWKS
-      // try {
-      //   const res = await fetch('/api/verify-google-idtoken', {
-      //     method: 'POST',
-      //     headers: {'Content-Type':'application/json'},
-      //     body: JSON.stringify({ id_token: idToken })
-      //   });
-      //   const data = await res.json();
-      //   if (!data.ok) throw new Error(data.error || 'Verifikasi gagal');
-      // } catch (err) {
-      //   console.error(err);
-      //   alert('Verifikasi server gagal. Cek console/server.');
-      // }
+      statusEl.textContent = "🟢 Sudah login";
+      profile.style.display = "block";
+      avatar.src = payload.picture;
+      nameEl.textContent = payload.name;
+      emailEl.textContent = payload.email;
+      payloadEl.textContent = JSON.stringify(payload, null, 2);
+      currentEmail = payload.email;
+      btnLogout.disabled = false;
     }
 
-    // ====== Inisialisasi GIS setelah script siap ======
-    window.onload = function () {
-      const clientIdMeta = document.querySelector('meta[name="google-signin-client_id"]');
-      const CLIENT_ID = clientIdMeta?.content || '402210260007-gcm29644ki9tojbndgq13gorio6v5ueq.apps.googleusercontent.com';
+    function logout() {
+      if (!currentEmail) return;
+      google.accounts.id.revoke(currentEmail, done => {
+        statusEl.textContent = "🔴 Belum login";
+        profile.style.display = "none";
+        btnLogout.disabled = true;
+      });
+    }
 
-      // 1) Initialize
+    window.onload = function () {
       google.accounts.id.initialize({
         client_id: CLIENT_ID,
         callback: handleCredentialResponse,
-        auto_select: false,            // true → login otomatis jika pernah memilih
-        cancel_on_tap_outside: true,   // tutup prompt saat klik di luar
-        context: 'signin',             // signin | signup | use
+        auto_select: false,
+        cancel_on_tap_outside: true
       });
 
-      // 2) Render tombol
-      google.accounts.id.renderButton(
-        document.getElementById("gBtn"),
-        {
-          theme: "filled_blue",  // filled_blue | outline
-          size: "large",         // large | medium | small
-          shape: "pill",         // pill | rectangular | circle | square
-          text: "signin_with",   // signin_with | continue_with | signup_with
-          logo_alignment: "left",
-          width: 320,
-        }
-      );
-
-      // 3) (Opsional) munculkan One Tap otomatis
-      // google.accounts.id.prompt();
-
-      // One Tap via tombol
-      btnPrompt.addEventListener('click', () => {
-        google.accounts.id.prompt((notification) => {
-          // Bisa baca status di sini jika perlu
-          // console.log('OneTap status:', notification);
-        });
+      google.accounts.id.renderButton(gBtn, {
+        theme: "filled_blue",
+        size: "large",
+        shape: "pill",
+        text: "signin_with",
+        width: 260
       });
 
-      // Logout / revoke
-      btnLogout.addEventListener('click', () => {
-        if (!currentEmail) return setLoggedOutUI();
-        google.accounts.id.revoke(currentEmail, done => {
-          // done = string “revoked” bila sukses
-          setLoggedOutUI();
-        });
-      });
+      btnPrompt.onclick = () => google.accounts.id.prompt();
+      btnLogout.onclick = logout;
     };
   </script>
+
 </body>
 </html>
